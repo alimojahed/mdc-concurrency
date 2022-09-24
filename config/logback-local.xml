@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration status="warn" packages="org.apache.logging.log4j2.core,io.sentry.log4j2">
+    <appenders>
+        <RollingFile name="Logfile" fileName="${env:LOG_FILE_PATH:-.}/notinou.out"
+                     filePattern="${env:LOG_FILE_PATH:-.}/%d{yy-MM-dd-HH}-%i.log.gz">
+            <!--            <PatternLayout pattern="[%-5level] %d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %c{1} - %m%n \n"/>-->
+
+            <PatternLayout alwaysWriteExceptions="false">
+                <pattern>
+                    {"@timestamp":"%d{yyyy-MM-dd'T'HH:mm:ssZ}","level":"%-5level","loggerName":"%c{1}","message":"%enc{%m}{JSON}","exception":"%replace{%ex}{[\r\n\t]}{ }","thread":"%t","line":"%L","location":"%l","method":"%M", "referenceId":"%X{REF_ID_TOKEN_KEY}"}
+                    %n
+                </pattern>
+            </PatternLayout>
+
+
+            <Policies>
+                <OnStartupTriggeringPolicy/>
+                <SizeBasedTriggeringPolicy size="40 MB"/>
+                <TimeBasedTriggeringPolicy/>
+            </Policies>
+
+            <DefaultRolloverStrategy max="50">
+                <Delete basePath="${env:LOG_FILE_PATH:-.}/" maxDepth="1">
+                    <IfFileName glob="*.log.gz" />
+                    <IfLastModified age="1m" />
+                </Delete>
+
+            </DefaultRolloverStrategy>
+
+        </RollingFile>
+
+
+        <RollingFile name="requestResponsesLog" fileName="${env:LOG_FILE_PATH:-.}/notinouRequestResponse.out"
+                     filePattern="${env:LOG_FILE_PATH:-.}/notinouRequestResponse-%d{yy-MM-dd-HH}-%i.log.gz">
+            <!--            <PatternLayout pattern="[%-5level] %d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %c{1} - %m%n \n"/>-->
+
+            <PatternLayout>
+                <pattern>
+                    %m %n
+                    {"@timestamp":"%d{yyyy-MM-dd'T'HH:mm:ssZ}","level":"%-5level","loggerName":"%c{1}","message":"%enc{%m}{JSON}"}
+                    %n
+                </pattern>
+            </PatternLayout>
+
+
+            <Policies>
+                <OnStartupTriggeringPolicy/>
+                <SizeBasedTriggeringPolicy size="40 MB"/>
+                <TimeBasedTriggeringPolicy/>
+            </Policies>
+
+            <DefaultRolloverStrategy max="50">
+                <Delete basePath="${env:LOG_FILE_PATH:-.}/" maxDepth="1">
+                    <IfFileName glob="notinouRequestResponse-*.log.gz" />
+                    <IfLastModified age="1m" />
+                </Delete>
+
+            </DefaultRolloverStrategy>
+
+        </RollingFile>
+
+        <Sentry name="Sentry"/>
+        <Console name="Console" recipient="SYSTEM_OUT">
+            <PatternLayout pattern="%d{HH:mm:ss.SSS} - %X{REF_ID_TOKEN_KEY} - [%t] %-5level %logger{36} - %msg%n"/>
+        </Console>
+    </appenders>
+
+    <loggers>
+        <root level="INFO" additivity="false">
+            <appender-ref ref="Logfile"/>
+            <!-- Note that the Sentry logging threshold is overridden to the WARN level -->
+            <appender-ref ref="Sentry" level="WARN"/>
+            <appender-ref ref="Console" level="debug"/>
+        </root>
+
+        <logger name="requestResponsesLog" additivity="false">
+            <appender-ref ref="requestResponsesLog"/>
+        </logger>
+
+    </loggers>
+</configuration>
